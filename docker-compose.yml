@@ -1,0 +1,39 @@
+version: '3.8'
+
+services:
+  oracle-db:
+    image: gvenzl/oracle-xe
+    container_name: oracle-container
+    ports:
+      - "1521:1521"
+    environment:
+      ORACLE_PASSWORD: admin
+      APP_USER: wateruser
+      APP_USER_PASSWORD: waterpass
+    healthcheck:
+      test: ["CMD", "sqlplus", "-L", "system/admin@//localhost:1521/XEPDB1", "<", "/dev/null"]
+      interval: 10s
+      timeout: 10s
+      retries: 10
+    networks:
+      - spring-net
+
+  spring-app:
+    build: .
+    container_name: springboot-app
+    ports:
+      - "8080:8080"
+    depends_on:
+      oracle-db:
+        condition: service_healthy
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:oracle:thin:@oracle-db:1521/XEPDB1
+      - SPRING_DATASOURCE_USERNAME=system
+      - SPRING_DATASOURCE_PASSWORD=admin
+      - SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT=org.hibernate.dialect.OracleDialect
+    networks:
+      - spring-net
+
+networks:
+  spring-net:
+    driver: bridge
