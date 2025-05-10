@@ -1,4 +1,4 @@
-Aqui está seu README completo com todos os detalhes profissionais, incluindo a equipe de desenvolvimento e mantendo todas as outras seções importantes:
+
 
 ```markdown
 # WaterMonitor - Sistema de Monitoramento de Água
