@@ -2,38 +2,42 @@ version: '3.8'
 
 services:
   oracle-db:
-    image: gvenzl/oracle-xe
-    container_name: oracle-container
+    image: gvenzl/oracle-xe:latest
+    container_name: oracle-db-fiap
     ports:
-      - "1521:1521"
+      - "1522:1521"
     environment:
-      ORACLE_PASSWORD: admin
-      APP_USER: wateruser
-      APP_USER_PASSWORD: waterpass
+      ORACLE_PASSWORD: admin  # Mantém apenas esta linha para senha
+      APP_USER: RM554460
+      APP_USER_PASSWORD: fiap100786
+      ORACLE_DATABASE: XEPDB1
+      ORACLE_REMOVE_RECOVERYFILES: "true"
+      # REMOVA a linha ORACLE_RANDOM_PASSWORD
+    volumes:
+      - oracle-data:/opt/oracle/oradata
     healthcheck:
       test: ["CMD", "sqlplus", "-L", "system/admin@//localhost:1521/XEPDB1", "<", "/dev/null"]
-      interval: 10s
-      timeout: 10s
-      retries: 10
-    networks:
-      - spring-net
+      interval: 30s
+      timeout: 30s
+      retries: 15
+      start_period: 120s
 
   spring-app:
-    build: .
-    container_name: springboot-app
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: watermonitor-app
     ports:
-      - "8080:8080"
+      - "8081:8080"
     depends_on:
       oracle-db:
         condition: service_healthy
     environment:
       - SPRING_DATASOURCE_URL=jdbc:oracle:thin:@oracle-db:1521/XEPDB1
-      - SPRING_DATASOURCE_USERNAME=system
-      - SPRING_DATASOURCE_PASSWORD=admin
-      - SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT=org.hibernate.dialect.OracleDialect
-    networks:
-      - spring-net
+      - SPRING_DATASOURCE_USERNAME=RM554460
+      - SPRING_DATASOURCE_PASSWORD=fiap100786
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=none
+      - SERVER_PORT=8080
 
-networks:
-  spring-net:
-    driver: bridge
+volumes:
+  oracle-data:
